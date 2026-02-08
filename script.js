@@ -1,17 +1,20 @@
 document.addEventListener('DOMContentLoaded', () => {
-  const menuBtn = document.querySelector('.mobile-menu-btn');
-  const navLinks = document.querySelector('.nav-links');
+  // Mobile Menu Behavior (Bootstrap handles toggle, we handle link clicks close)
+  const navLinks = document.querySelectorAll('.nav-link');
+  const navbarCollapse = document.querySelector('.navbar-collapse');
 
-  // Mobile Menu Toggle
-  if (menuBtn) {
-    menuBtn.addEventListener('click', () => {
-      navLinks.classList.toggle('active');
-      const icon = navLinks.classList.contains('active') ? 'fa-times' : 'fa-bars';
-      menuBtn.innerHTML = `<i class="fas ${icon}"></i>`;
+  navLinks.forEach(link => {
+    link.addEventListener('click', () => {
+      if (window.getComputedStyle(navbarCollapse).display !== 'none' && navbarCollapse.classList.contains('show')) {
+        // Bootstrap 5 Collapse Instance
+        const bsCollapse = new bootstrap.Collapse(navbarCollapse, {
+          toggle: true
+        });
+      }
     });
-  }
+  });
 
-  // Smooth Scroll for Anchor Links
+  // Smooth Scroll for Anchor Links (with offset for fixed header)
   document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', function (e) {
       e.preventDefault();
@@ -21,11 +24,6 @@ document.addEventListener('DOMContentLoaded', () => {
           top: target.offsetTop - 80, // Offset for sticky header
           behavior: 'smooth'
         });
-        // Close menu on mobile after click
-        if (navLinks.classList.contains('active')) {
-          navLinks.classList.remove('active');
-          menuBtn.innerHTML = '<i class="fas fa-bars"></i>';
-        }
       }
     });
   });
@@ -34,7 +32,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const fadeInObserver = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
-        entry.target.classList.add('fade-in-up');
+        entry.target.classList.add('animate-up');
+        entry.target.style.opacity = '1';
+        entry.target.style.transform = 'translateY(0)';
         fadeInObserver.unobserve(entry.target);
       }
     });
@@ -42,11 +42,15 @@ document.addEventListener('DOMContentLoaded', () => {
     threshold: 0.1
   });
 
-  document.querySelectorAll('.service-card, .brand-item, .contact-details .item, .testimonial-card').forEach(el => {
-    fadeInObserver.observe(el);
-    el.style.opacity = '0';
-    el.style.transform = 'translateY(20px)';
-    el.style.transition = 'opacity 0.6s ease-out, transform 0.6s ease-out';
+  // Observe elements
+  document.querySelectorAll('.service-card, .brand-item, .card, .img-fluid').forEach(el => {
+    // Only apply if not already animated
+    if (!el.classList.contains('animate-up')) {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(20px)';
+      el.style.transition = 'opacity 0.6s ease-out, transform 0.6s ease-out';
+      fadeInObserver.observe(el);
+    }
   });
 
   // Animated Counters
@@ -79,40 +83,12 @@ document.addEventListener('DOMContentLoaded', () => {
     counterObserver.observe(counter);
   });
 
-  // FAQ Accordion
-  const faqItems = document.querySelectorAll('.faq-item');
-
-  faqItems.forEach(item => {
-    const question = item.querySelector('.faq-question');
-    const answer = item.querySelector('.faq-answer');
-
-    question.addEventListener('click', () => {
-      // Close other open items
-      faqItems.forEach(otherItem => {
-        if (otherItem !== item && otherItem.classList.contains('active')) {
-          otherItem.classList.remove('active');
-          otherItem.querySelector('.faq-answer').style.maxHeight = null;
-        }
-      });
-
-      // Toggle current item
-      item.classList.toggle('active');
-      if (item.classList.contains('active')) {
-        answer.style.maxHeight = answer.scrollHeight + "px";
-      } else {
-        answer.style.maxHeight = null;
-      }
-    });
-  });
-
-
   // Scroll Spy for Active Link Highlighting
   const sections = document.querySelectorAll('section[id]');
-  const navLi = document.querySelectorAll('.nav-links li a');
 
   window.addEventListener('scroll', () => {
     let current = '';
-    const scrollPosition = window.scrollY + 250; // Increased offset to trigger active state earlier
+    const scrollPosition = window.scrollY + 100; // Offset
 
     sections.forEach(section => {
       const sectionTop = section.offsetTop;
@@ -122,21 +98,12 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    navLi.forEach(a => {
+    navLinks.forEach(a => {
       a.classList.remove('active');
-      if (a.getAttribute('href').includes(current)) {
+      if (current && a.getAttribute('href').includes(current)) {
         a.classList.add('active');
       }
     });
   });
 
-  // Dynamically add the fade-in-up class style if not present
-  const styleSheet = document.createElement("style");
-  styleSheet.innerText = `
-    .fade-in-up {
-      opacity: 1 !important;
-      transform: translateY(0) !important;
-    }
-  `;
-  document.head.appendChild(styleSheet);
 });
